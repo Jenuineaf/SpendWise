@@ -72,42 +72,12 @@
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-
-    --bg-page: #0f1420;
-    --bg-surface: #171d2b;
-    --bg-surface-alt: #1c2334;
-    /* --bg-sidebar intentionally NOT overridden here — the sidebar stays a
-       fixed light-frost brand surface in both themes. */
-
-    --ink-900: #f3f1ea;
-    --ink-700: #d6d3c8;
-    --ink-500: #a3a8bc;
-    --ink-400: #7d8299;
-    --ink-on-navy: #f4f1e8;
-    --ink-on-navy-muted: #9aa3c0;
-
-    --border: rgba(244, 241, 232, 0.10);
-    --border-strong: rgba(244, 241, 232, 0.18);
-
-    --status-good: #0ca30c;
-    --status-good-bg: rgba(12, 163, 12, 0.16);
-    --status-warning: #fab219;
-    --status-warning-bg: rgba(250, 178, 25, 0.14);
-    --status-critical: #e66767;
-    --status-critical-bg: rgba(230, 103, 103, 0.16);
-
-    --chart-line: #3987e5;
-    --chart-line-fill: rgba(57, 135, 229, 0.18);
-    --chart-bar: #3987e5;
-    --chart-bar-light: #184f95;
-    --chart-grid: #2c2c2a;
-    --chart-axis: #383835;
-    --chart-muted: #898781;
-  }
-}
+/* Dark mode is intentionally NOT triggered automatically from the OS/browser
+   preference (prefers-color-scheme) — this app always renders light,
+   regardless of the viewer's system setting, so it looks the same for
+   everyone. The block below stays dormant unless something explicitly
+   sets data-theme="dark" on <html> (no UI does this yet — a future manual
+   theme toggle could). */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg-page: #0f1420;
