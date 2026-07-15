@@ -194,6 +194,65 @@ async function bootApp() {
    DASHBOARD
    ============================================================ */
 
+function renderIncomeOverview(container, { income, totalBudgeted, totalSpent }) {
+  if (income == null) {
+    container.innerHTML = `
+      <div class="empty-state">Set your monthly income to see what's left to budget and spend.</div>
+      <div class="form-actions" style="justify-content:center; margin-top:4px;">
+        <button class="btn btn-gold btn-sm" id="income-overview-set-btn">Set monthly income</button>
+      </div>
+    `;
+    document.getElementById("income-overview-set-btn").addEventListener("click", () => goToView("settings"));
+    return;
+  }
+
+  const unallocated = income - totalBudgeted;
+  const remaining = income - totalSpent;
+  const allocPct = income > 0 ? Math.min((totalBudgeted / income) * 100, 100) : 0;
+  const spendPct = income > 0 ? Math.min((totalSpent / income) * 100, 100) : 0;
+  const allocClass = totalBudgeted > income ? "critical" : "good";
+  const spendClass = totalSpent >= income ? "critical" : totalSpent >= income * 0.8 ? "warning" : "good";
+
+  container.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:22px;">
+      <div class="flex-between">
+        <span class="text-sm text-muted">Monthly income</span>
+        <strong style="font-size:19px;">${formatMoney(income)}</strong>
+      </div>
+
+      <div>
+        <div class="flex-between text-sm" style="margin-bottom:6px;">
+          <span>Budgeted across categories</span>
+          <span>${formatMoney(totalBudgeted)}</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill ${allocClass}" style="width:${allocPct}%"></div></div>
+        <div class="budget-card-figures" style="margin-top:6px; justify-content:flex-end;">
+          <span>${
+            unallocated >= 0
+              ? formatMoney(unallocated) + " left to budget"
+              : formatMoney(-unallocated) + " over-allocated"
+          }</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex-between text-sm" style="margin-bottom:6px;">
+          <span>Spent so far this month</span>
+          <span>${formatMoney(totalSpent)}</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill ${spendClass}" style="width:${spendPct}%"></div></div>
+        <div class="budget-card-figures" style="margin-top:6px; justify-content:flex-end;">
+          <span>${
+            remaining >= 0
+              ? formatMoney(remaining) + " remaining from income"
+              : formatMoney(-remaining) + " over your income"
+          }</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 async function loadDashboard() {
   const now = new Date();
   const year = now.getFullYear();
@@ -239,6 +298,12 @@ async function loadDashboard() {
       <div class="stat-delta">${alertsCount ? "triggered this month" : "All within budget"}</div>
     </div>
   `;
+
+  renderIncomeOverview(document.getElementById("dashboard-income-overview"), {
+    income: state.user.monthly_income != null ? Number(state.user.monthly_income) : null,
+    totalBudgeted: totalBudget,
+    totalSpent,
+  });
 
   const trendPoints = trend.map((p) => ({ ...p, label: MONTH_NAMES[p.month - 1].slice(0, 3) }));
   renderLineChart(document.getElementById("dashboard-trend-chart"), trendPoints, { xKey: "month", yKey: "total", xLabel: "label" });
