@@ -72,3 +72,42 @@ monthly/yearly cadence so a rule anchored on the 31st doesn't drift across short
 job (materialize due expenses hourly), not a distributed task queue. `AsyncIOScheduler` runs
 in-process inside the FastAPI event loop via the `lifespan` context, with its own
 `AsyncSessionLocal()` session per run since it executes outside request scope.
+
+## Phase 3 — Import & analytics
+
+**CSV parsing is split from import orchestration.** `csv_parser.py` only knows about bytes,
+encodings, header aliases, and date/amount string parsing — it has no idea what an `Expense`
+is. `import_service.py` owns the business decisions (skip a credit row, fall back to "Other",
+what counts as a valid amount). This split is what makes "handles messy headers/encodings"
+testable in isolation: a `parse_amount("(1,234.50)")` unit test doesn't need a database.
+
+**Encoding detection tries a fixed list, not `chardet`/`charset-normalizer`.** UPI/bank export
+CSVs are overwhelmingly `utf-8-sig` (Excel's BOM-prefixed UTF-8) or `cp1252`/`latin-1`
+(legacy Windows exports with rupee symbols or accented merchant names). Trying four known
+encodings in order and taking the first clean decode is simpler and faster than a statistical
+detector, and covers what these exports actually look like in practice.
+
+**Header detection is alias-set matching, not fuzzy string matching.** Bank exports vary
+("Txn Date" vs "Value Date" vs "Date", "Narration" vs "Particulars") but the vocabulary is
+small and known. A hardcoded alias set per logical column is predictable and debuggable — a
+fuzzy-match/similarity-score approach would occasionally guess wrong in a way that's hard to
+explain to the user.
+
+**Debit/credit split columns are handled, and credit-only rows are skipped, not imported as
+negative expenses.** Indian bank statements commonly report `Withdrawal Amt.`/`Deposit Amt.`
+as two columns rather than one signed `Amount`. A credit row is income, not spending — SpendWise
+tracks expenses, so those rows are counted in `rows_skipped` with an explicit reason rather
+than silently dropped or wrongly imported as a expense.
+
+**Auto-categorization checks learned overrides before the global keyword map, and the
+longest matching keyword wins among overrides.** Per-user `CategoryKeywordRule` rows are
+written automatically whenever a user changes an expense's category via `PATCH
+/expenses/{id}` (see `expense_service.update_expense` → `categorizer.learn_override`) — no
+separate "teach me" endpoint needed, the correction *is* the training signal. The global
+map (`GLOBAL_KEYWORD_CATEGORY_MAP`) is deliberately Indian-market-flavored (Swiggy, Zomato,
+IRCTC, BigBasket, ...) since that's this project's target user base.
+
+**Analytics are pure SQL aggregations (`GROUP BY` + `func.sum`/`func.count`/`extract`), never
+a Python loop over fetched rows** — required by the spec, and it's also just correct: pushing
+the aggregation to Postgres means the app never pulls a user's full expense history into
+memory to compute a monthly trend.

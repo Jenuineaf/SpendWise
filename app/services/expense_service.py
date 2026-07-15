@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import NotFoundError
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate
+from app.services.categorizer import learn_override
 from app.services.category_service import get_category
 
 
@@ -70,6 +71,10 @@ async def update_expense(
         setattr(expense, field, value)
     await db.commit()
     await db.refresh(expense)
+
+    if "category_id" in updates and expense.merchant:
+        await learn_override(db, owner_id, expense.merchant, expense.category_id)
+
     return expense
 
 

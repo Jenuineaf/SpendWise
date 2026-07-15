@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.exceptions import AppException
-from app.routers import auth, budgets, categories, expenses, recurring
+from app.routers import analytics, auth, budgets, categories, expenses, import_, recurring
 from app.services.scheduler import shutdown_scheduler, start_scheduler
 
 
@@ -29,6 +29,8 @@ app.include_router(categories.router, prefix=settings.API_V1_PREFIX)
 app.include_router(expenses.router, prefix=settings.API_V1_PREFIX)
 app.include_router(budgets.router, prefix=settings.API_V1_PREFIX)
 app.include_router(recurring.router, prefix=settings.API_V1_PREFIX)
+app.include_router(import_.router, prefix=settings.API_V1_PREFIX)
+app.include_router(analytics.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health", tags=["health"])
