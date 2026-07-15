@@ -15,6 +15,26 @@ const state = {
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
+/* ---------------------------- theme toggle ---------------------------- */
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("sw_theme", theme);
+  document.getElementById("theme-icon-light").classList.toggle("hidden", theme === "dark");
+  document.getElementById("theme-icon-dark").classList.toggle("hidden", theme !== "dark");
+  document.getElementById("theme-toggle-label").textContent = theme === "dark" ? "Dark" : "Light";
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem("sw_theme");
+  applyTheme(saved === "dark" ? "dark" : "light");
+})();
+
+document.getElementById("btn-theme-toggle").addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  applyTheme(current === "dark" ? "light" : "dark");
+});
+
 /* ---------------------------- helpers ---------------------------- */
 
 function formatApiError(err) {

@@ -30,7 +30,16 @@
   --bg-page: var(--white);
   --bg-surface: var(--white);
   --bg-surface-alt: var(--beige-50);
+
+  /* sidebar — its own adaptive set, so toggling theme relights it fully
+     instead of leaving a light panel stranded against a dark page */
   --bg-sidebar: var(--beige-100);
+  --bg-sidebar-active: var(--white);
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.6);
+  --ink-sidebar: var(--navy-900);
+  --ink-sidebar-muted: var(--navy-800);
+  --sidebar-border: var(--beige-200);
+  --sidebar-accent: var(--navy-700);
 
   /* ink */
   --ink-900: #16213a;
@@ -73,16 +82,24 @@
 }
 
 /* Dark mode is intentionally NOT triggered automatically from the OS/browser
-   preference (prefers-color-scheme) — this app always renders light,
-   regardless of the viewer's system setting, so it looks the same for
-   everyone. The block below stays dormant unless something explicitly
-   sets data-theme="dark" on <html> (no UI does this yet — a future manual
-   theme toggle could). */
+   preference (prefers-color-scheme) — the app defaults to light regardless
+   of the viewer's system setting, so it looks the same for everyone until
+   they deliberately flip the in-app toggle (js/app.js applies data-theme
+   from localStorage on load, and on the toggle button's click). */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg-page: #0f1420;
   --bg-surface: #171d2b;
   --bg-surface-alt: #1c2334;
+
+  --bg-sidebar: #1c2a30;
+  --bg-sidebar-active: #29383f;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --ink-sidebar: #f4f1e8;
+  --ink-sidebar-muted: #b9c7cc;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-accent: #7c97a5;
+
   --ink-900: #f3f1ea;
   --ink-700: #d6d3c8;
   --ink-500: #a3a8bc;
@@ -140,12 +157,13 @@ svg { display: block; }
   width: 240px;
   flex-shrink: 0;
   background: var(--bg-sidebar);
-  border-right: 1px solid var(--beige-200);
-  color: var(--navy-900);
+  border-right: 1px solid var(--sidebar-border);
+  color: var(--ink-sidebar);
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
   gap: 28px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .brand {
@@ -160,7 +178,7 @@ svg { display: block; }
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: var(--navy-900);
+  color: var(--ink-sidebar);
 }
 
 .nav-group { display: flex; flex-direction: column; gap: 2px; flex: 1; }
@@ -170,7 +188,7 @@ svg { display: block; }
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  color: var(--navy-800);
+  color: var(--ink-sidebar-muted);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -180,34 +198,51 @@ svg { display: block; }
   width: 100%;
   text-align: left;
 }
-.nav-item:hover { background: rgba(255, 255, 255, 0.6); color: var(--navy-900); }
+.nav-item:hover { background: var(--bg-sidebar-hover); color: var(--ink-sidebar); }
 .nav-item.active {
-  background: var(--white);
-  color: var(--navy-900);
+  background: var(--bg-sidebar-active);
+  color: var(--ink-sidebar);
   font-weight: 700;
-  box-shadow: inset 3px 0 0 var(--navy-700), var(--shadow-sm);
+  box-shadow: inset 3px 0 0 var(--sidebar-accent), var(--shadow-sm);
 }
 .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.9; }
 
 .sidebar-footer {
-  border-top: 1px solid var(--beige-200);
+  border-top: 1px solid var(--sidebar-border);
   padding-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.sidebar-user { font-size: 13px; color: var(--navy-600); word-break: break-word; }
+.sidebar-user { font-size: 13px; color: var(--ink-sidebar-muted); word-break: break-word; }
+.theme-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-sidebar-hover);
+  border: 1px solid var(--sidebar-border);
+  color: var(--ink-sidebar);
+  border-radius: var(--radius-pill);
+  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.theme-toggle:hover { background: var(--bg-sidebar-active); }
+.theme-toggle svg { width: 14px; height: 14px; }
 .btn-logout {
   background: transparent;
-  border: 1px solid var(--navy-500);
-  color: var(--navy-800);
+  border: 1px solid var(--sidebar-border);
+  color: var(--ink-sidebar);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
   font-size: 13px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.btn-logout:hover { background: var(--white); }
+.btn-logout:hover { background: var(--bg-sidebar-hover); }
 
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
