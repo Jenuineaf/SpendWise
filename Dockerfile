@@ -19,6 +19,7 @@ RUN useradd --create-home --uid 1000 appuser
 
 COPY --from=builder /root/.local /home/appuser/.local
 COPY app ./app
+COPY frontend ./frontend
 COPY alembic ./alembic
 COPY alembic.ini .
 

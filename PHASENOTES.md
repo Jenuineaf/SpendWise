@@ -205,3 +205,58 @@ dependencies with `pip install --user`; the runtime stage copies only the result
 (`build-essential`) — keeping the shipped image smaller and reducing its attack surface. The
 container's `CMD` runs `alembic upgrade head` before starting `uvicorn`, so a fresh deploy
 never serves traffic against an unmigrated schema.
+
+## Phase 6 — Web UI
+
+**Vanilla HTML/CSS/JS, no build step, no framework.** `frontend/` is three plain files
+(`index.html`, `css/styles.css`, `js/{api,charts,app}.js`) plus one giant single-page shell —
+no npm, no bundler, no node_modules. For a project this size that's a feature, not a
+shortcut: it deploys as static files FastAPI already knows how to serve, there's nothing to
+break between "works on my machine" and "works in Docker," and every line is inspectable
+without a build step standing between the source and what ships.
+
+**Served by FastAPI itself, same-origin, mounted last.** `app.main` mounts
+`StaticFiles(directory="frontend", html=True)` at `/` — but only *after* every `/api/v1/*`
+router and `/health` are registered, because Starlette matches routes in registration order
+and a root-level `Mount` would otherwise shadow everything. Same-origin means the frontend's
+`fetch("/api/v1/...")` calls never touch CORS at all — one deployable service, one URL, no
+cross-origin token-passing to get wrong.
+
+**Brand chrome (navy/beige/gold) is deliberately separated from chart data color.** The
+dataviz skill's rule is "compute the palette, don't eyeball it" — so `chart-*` CSS custom
+properties in `styles.css` reuse the skill's pre-validated, colorblind-safe blue
+sequential/categorical hues for actual data encoding (trend line, bars, chart dots), while
+brand navy/gold/beige is reserved for UI chrome (nav, buttons, cards). Budget status
+(good/warning/critical) uses the skill's fixed status palette for the same reason — a status
+color is never allowed to double as a series color, and I didn't want to hand-guess whether a
+gold progress bar was distinguishable enough from a critical-red one.
+
+**Category-breakdown and top-merchants "charts" are direct-labeled horizontal bar lists, not
+a pie/donut.** A magnitude comparison across up to 10 categories is exactly the case the
+dataviz skill flags against rainbow categorical pies — instead every bar carries its own
+label and value, so identity never depends on distinguishing similar hues, and a user with 10
+categories doesn't need a legend to read it.
+
+**JWT refresh is transparent to the rest of the frontend.** `api.js`'s `request()` catches a
+401, attempts one silent `/auth/refresh` (de-duplicated via a shared in-flight promise so
+five simultaneous 401s don't fire five refresh calls), retries the original request once, and
+only then gives up and fires `sw:unauthorized` to force a re-login. No view code — expenses,
+budgets, goals, anything — has to know tokens can expire mid-session.
+
+**Budgets view shows every category, not just budgeted ones.** `loadBudgets()` diffs the
+user's full category list against this month's `Budget` rows and renders an inline "Set
+budget" prompt for anything missing, pre-filling that category in the form. The alternative
+(only showing categories that already have a budget) would hide the exact information a
+budgeting app exists to surface: *what haven't I budgeted for yet*.
+
+**File upload is a real native `<input type="file">`, not a JS-managed drag-drop widget.**
+`import_service.import_csv` already does all the real work (parsing, categorizing, skip
+reasons); the frontend's only job is to hand it a `FormData` blob and render the returned
+summary. Reinventing file-picker UI would be complexity with no payoff here.
+
+**Known gap, called out rather than hidden:** there's no client-side route guard beyond
+`bootApp()` checking for a token on load — a user who never logs in only ever sees the auth
+screen because `#app` stays `.hidden`, but there's no deep-linking (e.g. `/expenses` as a
+real URL) since the whole app runs as view-toggling under a single `/` route. Fine for a
+portfolio project's scope; a real product would want `history.pushState`-based routing so
+back/forward and shareable URLs work.

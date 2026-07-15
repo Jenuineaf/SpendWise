@@ -1,9 +1,10 @@
 # SpendWise
 
-A production-quality expense tracker API — multi-user, budget-aware, with CSV bank-statement
-import, SQL-driven analytics, an LLM budgeting advisor, and monthly PDF reports.
+A production-quality expense tracker — multi-user, budget-aware, with CSV bank-statement
+import, SQL-driven analytics, an LLM budgeting advisor, monthly PDF reports, and a full web UI.
 
-Built with **Python 3.12, FastAPI, PostgreSQL, and SQLAlchemy 2.0 (async)**.
+Backend: **Python 3.12, FastAPI, PostgreSQL, SQLAlchemy 2.0 (async)**.
+Frontend: **vanilla HTML/CSS/JS**, no build step, served by FastAPI itself.
 
 ## Features
 
@@ -18,16 +19,21 @@ Built with **Python 3.12, FastAPI, PostgreSQL, and SQLAlchemy 2.0 (async)**.
 - **LLM advisor** — ask spending questions in plain English, answered from your real data; provider-agnostic (OpenAI or Gemini), graceful fallback with no API key configured
 - **Savings goals** — target + deadline, progress projected from income vs. recent spending
 - **Data export** — CSV of raw expenses, and a formatted monthly PDF report
+- **Web UI** — dashboard, expenses, budgets, categories, recurring rules, CSV import, analytics
+  charts, savings goals, an advisor chat, and settings — a single-page app in `frontend/`,
+  served same-origin by FastAPI (no separate frontend deploy, no CORS)
 
 ## Architecture
 
 ```mermaid
 flowchart TB
-    subgraph Client
-        UI[API client / Swagger UI]
+    subgraph Browser
+        UI["frontend/ — vanilla HTML/CSS/JS SPA"]
+        Docs[Swagger UI / ReDoc]
     end
 
     subgraph FastAPI["FastAPI app (app/)"]
+        Static["StaticFiles mount — serves frontend/ at /"]
         Routers["routers/ — HTTP layer, no business logic"]
         Services["services/ — business logic, SQL aggregations, CSV parsing, LLM calls"]
         Schemas["schemas/ — Pydantic request/response models"]
@@ -40,7 +46,9 @@ flowchart TB
     Email[Email — console/SMTP]
     LLM[OpenAI / Gemini API]
 
-    UI -->|HTTP + JWT| Routers
+    UI -->|fetch, same-origin, JWT| Routers
+    Docs --> Routers
+    Static -.serves.-> UI
     Routers --> Services
     Services --> Models
     Models --> DB
@@ -58,8 +66,9 @@ phase.
 
 ## API docs
 
-Once running, interactive docs are at:
+Once running:
 
+- Web app: `http://localhost:8000/`
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 - OpenAPI schema: `http://localhost:8000/openapi.json`
@@ -104,7 +113,9 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-Visit `http://localhost:8000/docs`.
+Visit `http://localhost:8000/` for the web app, or `http://localhost:8000/docs` for the API
+docs. No separate frontend build/install step — `frontend/` is plain static files served
+directly by this same process.
 
 ### 6. Run tests
 
@@ -140,8 +151,8 @@ Notable ones:
 
 ## Roadmap
 
-Shipped in this build (Phases 1–5): auth, expense/budget/recurring core, CSV import + analytics,
-LLM advisor + alerts + savings goals + export, tests + CI + Docker.
+Shipped in this build (Phases 1–6): auth, expense/budget/recurring core, CSV import + analytics,
+LLM advisor + alerts + savings goals + export, tests + CI + Docker, and a full web UI.
 
 Not yet built — natural next steps:
 
@@ -151,3 +162,4 @@ Not yet built — natural next steps:
 - Push/webhook notifications alongside email alerts
 - Bank API integration (Account Aggregator) instead of manual CSV import
 - Per-test DB transaction rollback in the test suite (currently shares one schema per session, isolated by per-test random users — fine for correctness, not the fastest possible test run)
+- Real client-side routing (`history.pushState`) for the frontend — currently one URL with JS view-toggling, so there's no deep-linking or shareable per-page URLs
