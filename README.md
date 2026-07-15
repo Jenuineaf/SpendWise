@@ -1,5 +1,12 @@
 # SpendWise
 
+[![CI](https://github.com/Jenuineaf/SpendWise/actions/workflows/ci.yml/badge.svg)](https://github.com/Jenuineaf/SpendWise/actions/workflows/ci.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-async-009688.svg)](https://fastapi.tiangolo.com/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-informational.svg)](LICENSE)
+
+**Live demo:** [spendwise-7ov1.onrender.com](https://spendwise-7ov1.onrender.com) *(free-tier hosting — first load after inactivity can take ~30-60s to wake up)*
+
 A production-quality expense tracker — multi-user, budget-aware, with CSV bank-statement
 import, SQL-driven analytics, an LLM budgeting advisor, monthly PDF reports, and a full web UI.
 
