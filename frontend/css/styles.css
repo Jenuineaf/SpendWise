@@ -9,12 +9,13 @@
 :root {
   color-scheme: light;
 
-  /* brand */
-  --navy-900: #0d1b2e;
-  --navy-800: #14213d;
-  --navy-700: #1c2d4f;
-  --navy-600: #2a3b63;
-  --navy-500: #3d5182;
+  /* brand — royal blue, used as an accent (sidebar, buttons, headings),
+     not the page's base color; white/beige carry most of the surface area */
+  --navy-900: #1c2f8f;
+  --navy-800: #2f4cd6;
+  --navy-700: #4169e1;
+  --navy-600: #6482e8;
+  --navy-500: #93a9f0;
 
   --gold-400: #d9bb63;
   --gold-500: #c9a227;
@@ -26,12 +27,12 @@
 
   --white: #ffffff;
 
-  /* surfaces */
-  --bg-page: var(--beige-100);
+  /* surfaces — white-first; beige is a faint accent tint, not the base */
+  --bg-page: var(--white);
   --bg-surface: var(--white);
   --bg-surface-alt: var(--beige-50);
-  --bg-sidebar: var(--navy-900);
-  --bg-sidebar-active: var(--navy-700);
+  --bg-sidebar: var(--navy-800);
+  --bg-sidebar-active: var(--navy-900);
 
   /* ink */
   --ink-900: #16213a;
@@ -80,8 +81,8 @@
     --bg-page: #0f1420;
     --bg-surface: #171d2b;
     --bg-surface-alt: #1c2334;
-    --bg-sidebar: #0a0f1a;
-    --bg-sidebar-active: #1c2d4f;
+    /* --bg-sidebar / --bg-sidebar-active intentionally NOT overridden here —
+       the sidebar is a fixed brand-blue surface in both themes. */
 
     --ink-900: #f3f1ea;
     --ink-700: #d6d3c8;
@@ -114,8 +115,6 @@
   --bg-page: #0f1420;
   --bg-surface: #171d2b;
   --bg-surface-alt: #1c2334;
-  --bg-sidebar: #0a0f1a;
-  --bg-sidebar-active: #1c2d4f;
   --ink-900: #f3f1ea;
   --ink-700: #d6d3c8;
   --ink-500: #a3a8bc;
@@ -172,9 +171,8 @@ svg { display: block; }
 .sidebar {
   width: 240px;
   flex-shrink: 0;
-  background: var(--bg-surface-alt);
-  border-right: 1px solid var(--border);
-  color: var(--ink-900);
+  background: var(--bg-sidebar);
+  color: var(--ink-on-navy);
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
@@ -193,7 +191,7 @@ svg { display: block; }
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: var(--ink-900);
+  color: var(--ink-on-navy);
 }
 
 .nav-group { display: flex; flex-direction: column; gap: 2px; flex: 1; }
@@ -203,7 +201,7 @@ svg { display: block; }
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  color: var(--ink-500);
+  color: var(--ink-on-navy-muted);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -213,34 +211,34 @@ svg { display: block; }
   width: 100%;
   text-align: left;
 }
-.nav-item:hover { background: var(--bg-surface); color: var(--ink-900); }
+.nav-item:hover { background: rgba(255, 255, 255, 0.08); color: var(--ink-on-navy); }
 .nav-item.active {
-  background: var(--bg-surface);
-  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--ink-on-navy);
   font-weight: 700;
-  box-shadow: inset 3px 0 0 var(--gold-500), var(--shadow-sm);
+  box-shadow: inset 3px 0 0 var(--gold-500);
 }
-.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.9; }
 
 .sidebar-footer {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
   padding-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.sidebar-user { font-size: 13px; color: var(--ink-500); word-break: break-word; }
+.sidebar-user { font-size: 13px; color: var(--ink-on-navy-muted); word-break: break-word; }
 .btn-logout {
   background: transparent;
-  border: 1px solid var(--border-strong);
-  color: var(--ink-700);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: var(--ink-on-navy);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
   font-size: 13px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.btn-logout:hover { background: var(--bg-surface); }
+.btn-logout:hover { background: rgba(255, 255, 255, 0.1); }
 
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
@@ -452,8 +450,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 15% 15%, rgba(201, 162, 39, 0.16), transparent 42%),
-    radial-gradient(circle at 88% 85%, rgba(20, 33, 61, 0.10), transparent 42%),
+    radial-gradient(circle at 15% 15%, rgba(201, 162, 39, 0.14), transparent 42%),
+    radial-gradient(circle at 88% 85%, rgba(65, 105, 225, 0.10), transparent 42%),
     var(--bg-page);
   padding: 24px;
 }
