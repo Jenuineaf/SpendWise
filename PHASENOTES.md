@@ -37,3 +37,38 @@ is locked out immediately rather than waiting for their access token to expire.
 **Alembic wired for async from the start** (`async_engine_from_config` +
 `connection.run_sync`), reading `DATABASE_URL` from the same `Settings` object the app uses,
 so migrations and the app can never point at different databases by accident.
+
+## Phase 2 — Core domain
+
+**Default categories are real per-user rows, not a shared global table.** The spec calls for
+"sensible defaults seeded per user" — seeding 10 `Category` rows (flagged `is_default=True`)
+at signup, rather than a nullable `owner_id` "global category" concept, keeps every query a
+single `WHERE owner_id = :user_id` with no special-casing, and lets a user freely rename or
+delete a default category without affecting anyone else.
+
+**Categories can't be deleted while expenses reference them.** `delete_category` checks for
+any `Expense` row pointing at the category first and raises `ConflictError` — a hard 409, not
+a silent cascade. Losing the category label on historical spending data silently would make
+past analytics wrong without any signal to the user.
+
+**Budgets are a separate `(owner, category, year, month)` row, not a field on `Category`.**
+Storing `year`/`month` as plain ints instead of a `first-of-month` date keeps the uniqueness
+constraint and querying simple (`year=2026, month=7`) without timezone-boundary edge cases
+that a `DATE` column would introduce.
+
+**"Spent vs budget" is computed on read, not stored.** `BudgetRead` is a hand-built Pydantic
+model (not `from_attributes` off the ORM row) because `spent`/`remaining`/`percent_used`
+don't exist as columns — they're a `SUM(amount) WHERE category, year, month` query run at
+response time via `budget_service._compute_spent`. Always correct, no risk of a stored
+running total drifting from the underlying expenses after an edit or delete.
+
+**Recurring expenses use a catch-up loop, not a single materialize-and-done.** If the app (or
+its scheduler) is offline past a rule's `next_run`, `materialize_due_expenses` creates one
+`Expense` per missed cycle and advances `next_run` each time, capped at 366 iterations so a
+stale daily rule can't spin forever. `relativedelta` (not fixed-day `timedelta`) handles
+monthly/yearly cadence so a rule anchored on the 31st doesn't drift across shorter months.
+
+**APScheduler over Celery**, per the spec — this workload is a single recurring background
+job (materialize due expenses hourly), not a distributed task queue. `AsyncIOScheduler` runs
+in-process inside the FastAPI event loop via the `lifespan` context, with its own
+`AsyncSessionLocal()` session per run since it executes outside request scope.

@@ -14,6 +14,7 @@ from app.core.security import (
 )
 from app.models.user import User
 from app.schemas.user import UserCreate
+from app.services.category_service import seed_default_categories
 
 
 async def register_user(db: AsyncSession, data: UserCreate) -> User:
@@ -29,6 +30,7 @@ async def register_user(db: AsyncSession, data: UserCreate) -> User:
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    await seed_default_categories(db, user)
     return user
 
 
