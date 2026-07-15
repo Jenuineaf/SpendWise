@@ -1,6 +1,8 @@
 /* ============================================================
    SpendWise — design tokens
-   Brand chrome: navy / beige / gold (this app's identity).
+   Brand chrome: "Frosted Aura" — slate blue / gray / frost / white.
+   A single muted accent hue (no second warm hue), white-first,
+   light throughout — the sidebar included.
    Chart data + status colors: pulled from a pre-validated,
    colorblind-safe palette rather than hand-picked, so series
    and alert states stay distinguishable without guesswork.
@@ -9,30 +11,26 @@
 :root {
   color-scheme: light;
 
-  /* brand — royal blue, used as an accent (sidebar, buttons, headings),
-     not the page's base color; white/beige carry most of the surface area */
-  --navy-900: #1c2f8f;
-  --navy-800: #2f4cd6;
-  --navy-700: #4169e1;
-  --navy-600: #6482e8;
-  --navy-500: #93a9f0;
+  /* brand — slate blue accent family (#5c7e8f is the given brand tone) */
+  --navy-900: #34505c;
+  --navy-800: #45606d;
+  --navy-700: #5c7e8f;
+  --navy-600: #7c97a5;
+  --navy-500: #9fb3bc;
 
-  --gold-400: #d9bb63;
-  --gold-500: #c9a227;
-  --gold-600: #a9841e;
+  --gray-500: #a2a2a2;
 
-  --beige-50: #fbf8f2;
-  --beige-100: #f5efe1;
-  --beige-200: #ece1c9;
+  --beige-50: #eef2f4;
+  --beige-100: #d4dde2;
+  --beige-200: #c3d2d8;
 
   --white: #ffffff;
 
-  /* surfaces — white-first; beige is a faint accent tint, not the base */
+  /* surfaces — white-first; frost tint is a faint accent, not the base */
   --bg-page: var(--white);
   --bg-surface: var(--white);
   --bg-surface-alt: var(--beige-50);
-  --bg-sidebar: var(--navy-800);
-  --bg-sidebar-active: var(--navy-900);
+  --bg-sidebar: var(--beige-100);
 
   /* ink */
   --ink-900: #16213a;
@@ -42,11 +40,11 @@
   --ink-on-navy: #f4f1e8;
   --ink-on-navy-muted: #b9c0d4;
 
-  --border: rgba(20, 33, 61, 0.12);
-  --border-strong: rgba(20, 33, 61, 0.22);
-  --shadow-sm: 0 1px 2px rgba(13, 27, 46, 0.06), 0 1px 1px rgba(13, 27, 46, 0.04);
-  --shadow-md: 0 6px 16px rgba(13, 27, 46, 0.10), 0 2px 4px rgba(13, 27, 46, 0.06);
-  --shadow-lg: 0 16px 40px rgba(13, 27, 46, 0.16), 0 4px 10px rgba(13, 27, 46, 0.08);
+  --border: rgba(52, 80, 92, 0.12);
+  --border-strong: rgba(52, 80, 92, 0.22);
+  --shadow-sm: 0 1px 2px rgba(30, 45, 52, 0.06), 0 1px 1px rgba(30, 45, 52, 0.04);
+  --shadow-md: 0 6px 16px rgba(30, 45, 52, 0.10), 0 2px 4px rgba(30, 45, 52, 0.06);
+  --shadow-lg: 0 16px 40px rgba(30, 45, 52, 0.16), 0 4px 10px rgba(30, 45, 52, 0.08);
 
   /* status — fixed, never reused for series */
   --status-good: #0ca30c;
@@ -81,8 +79,8 @@
     --bg-page: #0f1420;
     --bg-surface: #171d2b;
     --bg-surface-alt: #1c2334;
-    /* --bg-sidebar / --bg-sidebar-active intentionally NOT overridden here —
-       the sidebar is a fixed brand-blue surface in both themes. */
+    /* --bg-sidebar intentionally NOT overridden here — the sidebar stays a
+       fixed light-frost brand surface in both themes. */
 
     --ink-900: #f3f1ea;
     --ink-700: #d6d3c8;
@@ -158,7 +156,7 @@ button { font-family: inherit; }
 ul { margin: 0; padding: 0; list-style: none; }
 svg { display: block; }
 
-::selection { background: var(--gold-400); color: var(--navy-900); }
+::selection { background: var(--beige-100); color: var(--navy-900); }
 
 .hidden { display: none !important; }
 
@@ -172,7 +170,8 @@ svg { display: block; }
   width: 240px;
   flex-shrink: 0;
   background: var(--bg-sidebar);
-  color: var(--ink-on-navy);
+  border-right: 1px solid var(--beige-200);
+  color: var(--navy-900);
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
@@ -191,7 +190,7 @@ svg { display: block; }
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: var(--ink-on-navy);
+  color: var(--navy-900);
 }
 
 .nav-group { display: flex; flex-direction: column; gap: 2px; flex: 1; }
@@ -201,7 +200,7 @@ svg { display: block; }
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  color: var(--ink-on-navy-muted);
+  color: var(--navy-800);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -211,34 +210,34 @@ svg { display: block; }
   width: 100%;
   text-align: left;
 }
-.nav-item:hover { background: rgba(255, 255, 255, 0.08); color: var(--ink-on-navy); }
+.nav-item:hover { background: rgba(255, 255, 255, 0.6); color: var(--navy-900); }
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--ink-on-navy);
+  background: var(--white);
+  color: var(--navy-900);
   font-weight: 700;
-  box-shadow: inset 3px 0 0 var(--gold-500);
+  box-shadow: inset 3px 0 0 var(--navy-700), var(--shadow-sm);
 }
 .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.9; }
 
 .sidebar-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid var(--beige-200);
   padding-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.sidebar-user { font-size: 13px; color: var(--ink-on-navy-muted); word-break: break-word; }
+.sidebar-user { font-size: 13px; color: var(--navy-600); word-break: break-word; }
 .btn-logout {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: var(--ink-on-navy);
+  border: 1px solid var(--navy-500);
+  color: var(--navy-800);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
   font-size: 13px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.btn-logout:hover { background: rgba(255, 255, 255, 0.1); }
+.btn-logout:hover { background: var(--white); }
 
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
@@ -279,8 +278,8 @@ svg { display: block; }
 .btn:active { transform: translateY(1px); }
 .btn-primary { background: var(--navy-800); color: var(--white); box-shadow: var(--shadow-sm); }
 .btn-primary:hover { background: var(--navy-700); }
-.btn-gold { background: var(--gold-500); color: var(--navy-900); box-shadow: var(--shadow-sm); }
-.btn-gold:hover { background: var(--gold-400); }
+.btn-gold { background: var(--beige-100); color: var(--navy-800); border-color: var(--navy-500); box-shadow: var(--shadow-sm); }
+.btn-gold:hover { background: var(--beige-200); }
 .btn-ghost { background: transparent; color: var(--ink-700); border-color: var(--border-strong); }
 .btn-ghost:hover { background: var(--bg-surface-alt); }
 .btn-danger { background: transparent; color: var(--status-critical); border-color: var(--status-critical); }
@@ -304,8 +303,8 @@ input, select, textarea {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 input:focus, select:focus, textarea:focus {
-  border-color: var(--gold-500);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+  border-color: var(--navy-700);
+  box-shadow: 0 0 0 3px rgba(92, 126, 143, 0.18);
 }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-row { display: flex; gap: 14px; flex-wrap: wrap; }
@@ -348,7 +347,7 @@ input:focus, select:focus, textarea:focus {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--gold-500), var(--navy-600));
+  background: linear-gradient(90deg, var(--navy-700), var(--beige-100));
 }
 .stat-label { font-size: 12.5px; color: var(--ink-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 .stat-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; margin-top: 6px; color: var(--ink-900); }
@@ -450,8 +449,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 15% 15%, rgba(201, 162, 39, 0.14), transparent 42%),
-    radial-gradient(circle at 88% 85%, rgba(65, 105, 225, 0.10), transparent 42%),
+    radial-gradient(circle at 15% 15%, rgba(92, 126, 143, 0.10), transparent 45%),
+    radial-gradient(circle at 88% 85%, rgba(212, 221, 226, 0.6), transparent 45%),
     var(--bg-page);
   padding: 24px;
 }
@@ -488,7 +487,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(13, 27, 46, 0.55);
+  background: rgba(30, 45, 52, 0.55);
   display: none;
   align-items: center;
   justify-content: center;
@@ -531,7 +530,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   box-shadow: var(--shadow-md);
   font-size: 13.5px;
   min-width: 220px;
-  border-left: 3px solid var(--gold-500);
+  border-left: 3px solid var(--navy-700);
   animation: toast-in 0.2s ease;
 }
 .toast.error { border-left-color: var(--status-critical); }
@@ -585,7 +584,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .spinner {
   width: 18px; height: 18px;
   border: 2px solid var(--border-strong);
-  border-top-color: var(--gold-500);
+  border-top-color: var(--navy-700);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -603,7 +602,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700;
 }
-.advisor-msg.bot .advisor-avatar { background: var(--gold-500); color: var(--navy-900); }
+.advisor-msg.bot .advisor-avatar { background: var(--beige-100); color: var(--navy-800); }
 .advisor-msg.user .advisor-avatar { background: var(--navy-800); color: var(--white); }
 .advisor-input-row { display: flex; gap: 10px; margin-top: 16px; }
 .advisor-input-row input { flex: 1; }
