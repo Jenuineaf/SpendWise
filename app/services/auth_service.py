@@ -13,7 +13,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
 from app.services.category_service import seed_default_categories
 
 
@@ -66,3 +66,11 @@ async def refresh_access_token(db: AsyncSession, refresh_token: str) -> dict:
     if user is None or not user.is_active:
         raise UnauthorizedError()
     return issue_tokens(user)
+
+
+async def update_profile(db: AsyncSession, user: User, data: UserUpdate) -> User:
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(user, field, value)
+    await db.commit()
+    await db.refresh(user)
+    return user

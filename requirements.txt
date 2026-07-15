@@ -11,3 +11,6 @@ python-multipart==0.0.20
 email-validator==2.2.0
 apscheduler==3.10.4
 python-dateutil==2.9.0.post0
+aiosmtplib==3.0.2
+reportlab==4.2.5
+httpx==0.28.1

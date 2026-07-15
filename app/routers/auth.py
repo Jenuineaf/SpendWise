@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core.deps import CurrentUser, DBSession
 from app.schemas.auth import Token, TokenRefreshRequest
-from app.schemas.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -30,3 +30,8 @@ async def refresh(data: TokenRefreshRequest, db: DBSession):
 @router.get("/me", response_model=UserRead)
 async def me(current_user: CurrentUser):
     return current_user
+
+
+@router.patch("/me", response_model=UserRead)
+async def update_me(data: UserUpdate, current_user: CurrentUser, db: DBSession):
+    return await auth_service.update_profile(db, current_user, data)

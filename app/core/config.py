@@ -14,6 +14,19 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # Phase 4: LLM advisor
+    LLM_PROVIDER: str = "openai"
+    OPENAI_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
+
+    # Phase 4: email alerts
+    EMAIL_BACKEND: str = "console"
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int = 587
+    SMTP_USER: str | None = None
+    SMTP_PASSWORD: str | None = None
+    EMAIL_FROM: str = "noreply@spendwise.local"
+
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT == "production"

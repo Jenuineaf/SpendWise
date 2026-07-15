@@ -111,3 +111,46 @@ IRCTC, BigBasket, ...) since that's this project's target user base.
 a Python loop over fetched rows** — required by the spec, and it's also just correct: pushing
 the aggregation to Postgres means the app never pulls a user's full expense history into
 memory to compute a monthly trend.
+
+## Phase 4 — Advisor & alerts
+
+**Budget alerts key off `(budget_id, threshold)`, not `(budget_id,)`.** A `Budget` row is
+already scoped to one category+month, so this constraint means each of the 80%/100%
+thresholds fires its email exactly once per budget, ever — checked via a plain `SELECT`
+before insert rather than a `try/except IntegrityError` race, since alert checks happen
+inline after a single user's own write (no concurrent-write risk to guard against here).
+Only the *highest* threshold crossed in one pass emails (checked 100 before 80) so pushing an
+expense that jumps a category straight past 100% doesn't send two emails back to back.
+
+**Alert checks run on manual expense writes, not on bulk CSV import.** `create_expense` and
+`update_expense` call `check_and_trigger_alerts`; `import_service.import_csv` inserts `Expense`
+rows directly and does not. Importing a year of bank history would otherwise fire a wall of
+threshold-crossing emails for old, already-known spending — alerts are for *new* spending
+decisions, not retroactive ones.
+
+**LLM advisor talks to OpenAI/Gemini over raw `httpx`, not their SDKs.** Both providers
+implement one `LLMProvider.ask(system_prompt, question) -> str` interface
+(`app/services/llm/`), so swapping providers is a one-line change in `get_llm_provider()` and
+the app doesn't carry two heavyweight SDK dependencies for what's ultimately one JSON POST
+each. A `NullProvider` is the fallback when no API key is set — it returns the grounded data
+summary itself instead of erroring, so `/advisor/ask` stays useful (and honest about not
+having a real model behind it) with zero config.
+
+**The advisor is only as grounded as the prompt.** `advisor_service.build_spending_summary`
+assembles real numbers (3-month trend, this month's category breakdown, top merchants,
+budget status) into the system prompt and instructs the model not to invent figures — but
+this is a prompt-level constraint, not a hard guarantee. Documented here as a known limitation
+rather than something Phase 4 claims to have solved.
+
+**Savings goal "progress" is a projection, not a ledger.** SpendWise has no bank/savings
+account integration, so there's no actual "amount saved" to read. Progress is estimated as
+`(monthly_income − recent 3-month average expense) × months remaining until deadline`,
+which needs `monthly_income` to be set (`PATCH /auth/me`) to produce anything other than zero.
+This is called out explicitly in the API response (`estimated_monthly_savings`,
+`avg_monthly_expense` are both returned) so the projection's inputs are visible, not hidden
+behind a single confident-looking percentage.
+
+**PDF reports use reportlab's Platypus layer (`SimpleDocTemplate` + `Table`), not raw
+canvas drawing.** Platypus handles page breaks and table layout automatically — a category
+breakdown or budget table that overflows one page just continues on the next, which
+raw `canvas.drawString` coordinate placement doesn't give you for free.
