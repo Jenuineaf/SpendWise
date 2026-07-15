@@ -34,6 +34,38 @@ async def test_login_success_and_wrong_password(client):
     assert bad.status_code == 401
 
 
+async def test_login_is_case_insensitive_on_email(client):
+    unique = uuid.uuid4().hex[:8]
+    signup_email = f"MixedCase_{unique}@Example.COM"
+    password = "StrongPass123"
+
+    signup = await client.post(
+        "/api/v1/auth/signup", json={"email": signup_email, "password": password}
+    )
+    assert signup.status_code == 201
+    assert signup.json()["email"] == signup_email.lower()  # stored normalized
+
+    login = await client.post(
+        "/api/v1/auth/login",
+        data={"username": signup_email.upper(), "password": password},
+    )
+    assert login.status_code == 200
+    assert "access_token" in login.json()
+
+
+async def test_signup_duplicate_email_rejected_across_case(client):
+    unique = uuid.uuid4().hex[:8]
+    email = f"dupe_{unique}@example.com"
+    payload = {"email": email, "password": "StrongPass123"}
+    first = await client.post("/api/v1/auth/signup", json=payload)
+    assert first.status_code == 201
+
+    second = await client.post(
+        "/api/v1/auth/signup", json={"email": email.upper(), "password": "StrongPass123"}
+    )
+    assert second.status_code == 409
+
+
 async def test_me_requires_valid_token(client, auth_headers):
     response = await client.get("/api/v1/auth/me", headers=auth_headers)
     assert response.status_code == 200

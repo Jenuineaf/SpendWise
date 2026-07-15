@@ -1,7 +1,7 @@
 import uuid
 
 from jose import JWTError
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, UnauthorizedError
@@ -18,12 +18,15 @@ from app.services.category_service import seed_default_categories
 
 
 async def register_user(db: AsyncSession, data: UserCreate) -> User:
-    existing = await db.execute(select(User).where(User.email == data.email))
+    normalized_email = data.email.strip().lower()
+    existing = await db.execute(
+        select(User).where(func.lower(User.email) == normalized_email)
+    )
     if existing.scalar_one_or_none() is not None:
         raise ConflictError("Email already registered")
 
     user = User(
-        email=data.email,
+        email=normalized_email,
         full_name=data.full_name,
         hashed_password=hash_password(data.password),
     )
@@ -35,7 +38,10 @@ async def register_user(db: AsyncSession, data: UserCreate) -> User:
 
 
 async def authenticate_user(db: AsyncSession, email: str, password: str) -> User:
-    result = await db.execute(select(User).where(User.email == email))
+    normalized_email = email.strip().lower()
+    result = await db.execute(
+        select(User).where(func.lower(User.email) == normalized_email)
+    )
     user = result.scalar_one_or_none()
     if user is None or not verify_password(password, user.hashed_password):
         raise UnauthorizedError("Incorrect email or password")
