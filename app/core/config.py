@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +27,15 @@ class Settings(BaseSettings):
     SMTP_USER: str | None = None
     SMTP_PASSWORD: str | None = None
     EMAIL_FROM: str = "noreply@spendwise.local"
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def _ensure_asyncpg_driver(cls, value: str) -> str:
+        # Managed Postgres providers (Render, Railway, ...) hand out a plain
+        # postgresql:// connection string; the app needs the asyncpg driver.
+        if value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return value
 
     @property
     def is_production(self) -> bool:
