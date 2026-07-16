@@ -214,7 +214,7 @@ async function bootApp() {
    DASHBOARD
    ============================================================ */
 
-function renderIncomeOverview(container, { income, totalBudgeted, totalSpent }) {
+function renderIncomeOverview(container, { income, totalBudgeted, totalSpent, spentInBudgets }) {
   if (income == null) {
     container.innerHTML = `
       <div class="empty-state">Set your monthly income to see what's left to budget and spend.</div>
@@ -226,12 +226,23 @@ function renderIncomeOverview(container, { income, totalBudgeted, totalSpent }) 
     return;
   }
 
+  // Chain: income -> divided into budgets -> spending draws down the budget
+  // it belongs to (not straight off income). Unbudgeted spending draws
+  // straight from the unallocated pool instead. The bottom-line "still
+  // available" figure is always income - totalSpent either way — it's
+  // just the two bars above that show *where* that spending came from.
   const unallocated = income - totalBudgeted;
-  const remaining = income - totalSpent;
   const allocPct = income > 0 ? Math.min((totalBudgeted / income) * 100, 100) : 0;
-  const spendPct = income > 0 ? Math.min((totalSpent / income) * 100, 100) : 0;
   const allocClass = totalBudgeted > income ? "critical" : "good";
-  const spendClass = totalSpent >= income ? "critical" : totalSpent >= income * 0.8 ? "warning" : "good";
+
+  const spentOutsideBudgets = Math.max(totalSpent - spentInBudgets, 0);
+  const hasBudgets = totalBudgeted > 0;
+  const budgetSpendPct = hasBudgets ? Math.min((spentInBudgets / totalBudgeted) * 100, 100) : 0;
+  const budgetSpendClass =
+    spentInBudgets >= totalBudgeted ? "critical" : spentInBudgets >= totalBudgeted * 0.8 ? "warning" : "good";
+  const leftInBudgets = totalBudgeted - spentInBudgets;
+
+  const totalAvailable = income - totalSpent;
 
   container.innerHTML = `
     <div style="display:flex; flex-direction:column; gap:22px;">
@@ -242,14 +253,14 @@ function renderIncomeOverview(container, { income, totalBudgeted, totalSpent }) 
 
       <div>
         <div class="flex-between text-sm" style="margin-bottom:6px;">
-          <span>Budgeted across categories</span>
+          <span>① Divided into budgets</span>
           <span>${formatMoney(totalBudgeted)}</span>
         </div>
         <div class="progress-track"><div class="progress-fill ${allocClass}" style="width:${allocPct}%"></div></div>
         <div class="budget-card-figures" style="margin-top:6px; justify-content:flex-end;">
           <span>${
             unallocated >= 0
-              ? formatMoney(unallocated) + " left to budget"
+              ? formatMoney(unallocated) + " still unallocated"
               : formatMoney(-unallocated) + " over-allocated"
           }</span>
         </div>
@@ -257,17 +268,27 @@ function renderIncomeOverview(container, { income, totalBudgeted, totalSpent }) 
 
       <div>
         <div class="flex-between text-sm" style="margin-bottom:6px;">
-          <span>Spent so far this month</span>
-          <span>${formatMoney(totalSpent)}</span>
+          <span>② Spent from those budgets</span>
+          <span>${formatMoney(spentInBudgets)}${hasBudgets ? ` of ${formatMoney(totalBudgeted)}` : ""}</span>
         </div>
-        <div class="progress-track"><div class="progress-fill ${spendClass}" style="width:${spendPct}%"></div></div>
+        <div class="progress-track"><div class="progress-fill ${hasBudgets ? budgetSpendClass : "good"}" style="width:${hasBudgets ? budgetSpendPct : 0}%"></div></div>
         <div class="budget-card-figures" style="margin-top:6px; justify-content:flex-end;">
           <span>${
-            remaining >= 0
-              ? formatMoney(remaining) + " remaining from income"
-              : formatMoney(-remaining) + " over your income"
+            hasBudgets
+              ? (leftInBudgets >= 0 ? formatMoney(leftInBudgets) + " left in budgets" : formatMoney(-leftInBudgets) + " over budget")
+              : "No budgets set yet"
           }</span>
         </div>
+        ${
+          spentOutsideBudgets > 0
+            ? `<div class="text-sm text-muted" style="margin-top:6px;">+ ${formatMoney(spentOutsideBudgets)} spent in categories with no budget set — drawn from unallocated income instead</div>`
+            : ""
+        }
+      </div>
+
+      <div class="flex-between" style="padding-top:14px; border-top:1px solid var(--border);">
+        <span class="text-sm text-muted">③ Still available this month</span>
+        <strong style="font-size:17px; color:${totalAvailable < 0 ? "var(--status-critical)" : "var(--ink-900)"};">${formatMoney(totalAvailable)}</strong>
       </div>
     </div>
   `;
@@ -319,10 +340,12 @@ async function loadDashboard() {
     </div>
   `;
 
+  const spentInBudgets = budgets.reduce((sum, b) => sum + Number(b.spent), 0);
   renderIncomeOverview(document.getElementById("dashboard-income-overview"), {
     income: state.user.monthly_income != null ? Number(state.user.monthly_income) : null,
     totalBudgeted: totalBudget,
     totalSpent,
+    spentInBudgets,
   });
 
   const trendPoints = trend.map((p) => ({ ...p, label: MONTH_NAMES[p.month - 1].slice(0, 3) }));
